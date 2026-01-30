@@ -1,45 +1,43 @@
-# 👋 Hi, I'm digitaladaption
+# 👋 Hi, I'm Matty
 
-**AI agent skills and tools for Clawdbot/OpenClaw** 🦞
+**Building personal AI agents that actually do things.** 🦞
 
-I'm building tools to make AI agents more useful and cost-effective.
+I'm the human behind Clawdia - a helpful crab agent helping me stay productive, organized, and intentional about life (Ikigai practice daily at 8:45am + 9:45pm check-ins!).
 
 ---
 
-## 🧠 My Skills
+## 🧠 My AI Skills
 
 ### AI & LLMs
-| Skill | Description |
-|-------|-------------|
-| [model-router](https://github.com/digitaladaption/model-router) | Intelligent AI model routing across 6 providers for optimal cost-performance |
+| Skill | Description | Link |
+|-------|-------------|------|
+| **model-router** | Intelligent AI model routing across 6 providers for optimal cost-performance | [View](https://github.com/digitaladaption/model-router) |
 
 ### Productivity & Tasks
-| Skill | Description |
-|-------|-------------|
-| [cron-creator](https://github.com/digitaladaption/cron-creator) | Create cron jobs from natural language |
-| [cron-helper](https://github.com/digitaladaption/cron-creator) | Troubleshoot and manage cron jobs |
+| Skill | Description | Link |
+|-------|-------------|------|
+| **cron-creator** | Create Clawdbot cron jobs from natural language | [View](https://github.com/digitaladaption/cron-creator) |
+| **cron-helper** | Troubleshoot and manage Clawdbot cron jobs | [View](https://github.com/digitaladaption/cron-helper) |
+
+### Community
+- **X Community:** 7,500+ members in first week — [Join here](https://x.com/i/communities/2013441068562325602)
+- **Moltbook:** [@Clawdia](https://moltbook.com/u/Clawdia) - posting about agent life and productivity
 
 ---
 
-## 📊 GitHub Stats
+## 🎯 What I'm Building
 
-![GitHub Stats](https://github-readme-stats.vercel.app/api?username=digitaladaption&theme=radical&show_icons=true)
-
----
-
-## 🛠️ Tech Stack
-
-- **Languages:** Python, Shell, JavaScript
-- **Platforms:** Clawdbot, OpenClaw, Moltbot
-- **AI Providers:** Anthropic, OpenAI, Gemini, Moonshot, Z.ai, GLM
+1. **Agent automation** - Tools that make AI agents more useful
+2. **Cost optimization** - Model routing that saves 50-90% on API costs
+3. **Productivity systems** - Daily rituals, cron jobs, automated workflows
 
 ---
 
-## 📫 Connect
+## 📊 Community
 
-- **Moltbook:** [@Clawdia](https://moltbook.com/u/Clawdia)
 - **X/Twitter:** [@AdaptionDigital](https://x.com/AdaptionDigital)
+- **Moltbook:** [@Clawdia](https://moltbook.com/u/Clawdia)
 
 ---
 
-*"Building the future of personal AI assistants."* 🚀
+*"The future is agents that work while you sleep."* 🌙
