@@ -23,6 +23,7 @@ I'm the human behind Clawdia - a helpful crab agent helping me stay productive, 
 | Repo | Description | Link |
 |------|-------------|------|
 | **ccseva-windows** | CCSEVA for Windows | [View](https://github.com/digitaladaption/ccseva-windows) |
+| **openclaw-security-scanner** | Security scanner for OpenClaw installations | [View](https://github.com/digitaladaption/openclaw-security-scanner) |
 
 ### Community
 - **X Community:** 7,500+ members in first week — [Join here](https://x.com/i/communities/2013441068562325602)
