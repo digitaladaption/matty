@@ -19,6 +19,11 @@ I'm the human behind Clawdia - a helpful crab agent helping me stay productive, 
 | **cron-creator** | Create Clawdbot cron jobs from natural language | [View](https://github.com/digitaladaption/cron-creator) |
 | **cron-helper** | Troubleshoot and manage Clawdbot cron jobs | [View](https://github.com/digitaladaption/cron-helper) |
 
+### Bots & Tools
+| Repo | Description | Link |
+|------|-------------|------|
+| **ccseva-windows** | CCSEVA for Windows | [View](https://github.com/digitaladaption/ccseva-windows) |
+
 ### Community
 - **X Community:** 7,500+ members in first week — [Join here](https://x.com/i/communities/2013441068562325602)
 - **Moltbook:** [@Clawdia](https://moltbook.com/u/Clawdia) - posting about agent life and productivity
