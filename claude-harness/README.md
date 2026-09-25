@@ -17,6 +17,9 @@ claude-harness/
     │   ├── plan-approve.sh     # UserPromptSubmit: your "approve" reply approves the plan
     │   ├── memory-log.sh       # Stop: writes a per-session memory entry
     │   └── session-start.sh    # SessionStart: git state, plan, recent memory, HANDOFF.md
+    ├── scripts/
+    │   ├── lessons.sh          # weekly: session memory → LESSONS.md, via headless claude
+    │   └── install-cron.sh     # schedules lessons.sh in your crontab
     ├── agents/
     │   └── reviewer.md         # reviews the diff and re-checks plan criteria
     └── skills/
@@ -38,11 +41,31 @@ Run `./tests/run.sh` after changing any hook.
 
 ## How the pieces fit
 
-- **Session start**: `session-start.sh` prints the branch, uncommitted changes, the current plan's criteria, the last 3 session memories and any `HANDOFF.md`.
+- **Session start**: `session-start.sh` prints the branch, uncommitted changes, `LESSONS.md`, the current plan's criteria, the last 3 session memories and any `HANDOFF.md`.
 - **Every Bash call**: `guard-bash.sh` checks the command against a denylist (`rm -rf /`, force push, `reset --hard`, `curl | sh`…) and blocks it with exit code 2.
-- **After every turn**: `memory-log.sh` rewrites this session's entry in `.claude/memory/sessions/`: branch, last commit, uncommitted files, plan progress and Claude's last message. It keeps the 20 newest.
+- **After every turn**: `memory-log.sh` rewrites this session's entry in `.claude/memory/sessions/`: branch, last commit, uncommitted files, plan progress, your last 5 messages and Claude's last reply. It keeps the 20 newest.
 - **End of session**: `/handoff` is still there for when you want a deliberate, written summary on top of the automatic log.
 - **Before committing**: ask Claude to use the `reviewer` subagent.
+
+### The lessons loop
+
+Once a week, `lessons.sh` sends the week's session memory, recent commits and the current
+`.claude/LESSONS.md` to `claude -p`, and gets back a rewritten lessons file: at most 25 rules like
+`- Use pnpm, not npm (evidence: user corrected npm usage; seen 2x, last 2026-09-23)`.
+It only keeps rules backed by a correction, a repeated instruction or a decision. One-off tasks are dropped.
+
+```bash
+.claude/scripts/lessons.sh --dry-run          # see what it would write
+.claude/scripts/install-cron.sh               # schedule it: Fridays 17:50
+.claude/scripts/install-cron.sh --schedule "0 21 * * 0"
+.claude/scripts/install-cron.sh --remove
+```
+
+- Claude runs from a temp directory with `--tools ""` and user settings only, so it can only return text and the project's hooks don't log the run as a session.
+- Output that doesn't start with `# Lessons` (or is over 80 lines) is rejected, and the old file stays.
+- The previous version is saved to `.claude/memory/LESSONS.prev.md`. `LESSONS.md` itself isn't gitignored, so you can commit it and share it.
+- Runs log to `.claude/memory/lessons.log`. Each run is one headless Claude call, billed like any other.
+- Cron needs your machine awake and `claude` logged in. On macOS, cron may need Full Disk Access to reach the project. If you already schedule jobs through Clawdbot, point it at `lessons.sh` instead.
 
 ### The plan gate
 

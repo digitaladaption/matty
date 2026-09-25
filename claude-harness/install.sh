@@ -28,7 +28,7 @@ while IFS= read -r f; do
 done < <(find ./.claude -type f -not -path './.claude/memory/*')
 
 copy CLAUDE.md
-chmod +x "$target"/.claude/hooks/*.sh
+chmod +x "$target"/.claude/hooks/*.sh "$target"/.claude/scripts/*.sh
 
 # Session memory is personal by default. Delete this line from the project's
 # .gitignore to share it (e.g. so cloud sessions keep it between runs).

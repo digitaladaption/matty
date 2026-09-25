@@ -13,6 +13,11 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "- Uncommitted changes: $changes"
 fi
 
+if [[ -f .claude/LESSONS.md ]]; then
+  echo
+  sed 's/^# Lessons/## Lessons learned in this project (follow these)/' .claude/LESSONS.md
+fi
+
 if [[ -f PLAN.md ]]; then
   echo
   echo "## Current plan (PLAN.md)"
