@@ -125,5 +125,61 @@ check "existing cron lines kept" "# my jobs||0 9 * * * echo hi" "$(head -3 "$cta
 check "cron job removed" 0 "$(grep -c 'claude-harness-lessons' "$ctab")"
 check "other cron lines survive removal" 1 "$(grep -c 'echo hi' "$ctab")"
 
+# promote.sh: proposals, guard validation, user-only apply, reject
+cat >"$proj/.claude/LESSONS.md" <<'L'
+# Lessons
+
+## Tools
+- Use pnpm, not npm (evidence: corrected; seen 6x, last 2026-09-25)
+
+## Style
+- Keep functions small (evidence: asked; seen 5x, last 2026-09-25)
+- Rarely mentioned thing (evidence: once; seen 2x, last 2026-09-25)
+- Never deploy on Fridays (evidence: said; seen 7x, last 2026-09-25)
+L
+cat >"$proj/reply" <<'R'
+```json
+[{"index": 0, "kind": "guard", "pattern": "(^|[;&|[:space:]])npm([[:space:]]|$)",
+  "message": "This repo uses pnpm. Run the pnpm equivalent.",
+  "block_examples": ["npm install", "cd app && npm test", "npm run build"],
+  "allow_examples": ["pnpm install", "pnpm test", "echo npm-free"]},
+ {"index": 1, "kind": "claude_md", "text": "Keep functions under 40 lines."},
+ {"index": 2, "kind": "guard", "pattern": ".", "message": "no",
+  "block_examples": ["deploy"], "allow_examples": []}]
+```
+R
+promote="$scripts/promote.sh"
+reply() { run promote-reply.sh "$(prompt "$1")" >/dev/null; }
+pending() { jq '.pending | length' "$proj/.claude/memory/promotions.json"; }
+
+"$promote" propose "$proj" >/dev/null 2>&1
+check "promote proposes only lessons seen 5x+" 3 "$(pending)"
+check "valid guard kept as guard" guard "$(jq -r '.pending[0].kind' "$proj/.claude/memory/promotions.json")"
+check "match-everything guard downgraded" claude_md "$(jq -r '.pending[2].kind' "$proj/.claude/memory/promotions.json")"
+echo "not json" >"$proj/reply"
+"$promote" propose "$proj" >/dev/null 2>&1
+check "re-propose adds no duplicates" 3 "$(pending)"
+check "session-start lists pending promotions" 1 "$("$hooks/session-start.sh" | grep -c 'Lesson promotions waiting')"
+check "guard stops Claude applying promotions" 2 "$(run guard-bash.sh "$(bash_cmd '.claude/scripts/promote.sh apply 1')")"
+
+reply "I think we should promote this"
+check "chatter doesn't promote" 3 "$(pending)"
+check "npm allowed before promotion" 0 "$(run guard-bash.sh "$(bash_cmd 'npm install')")"
+reply "Promote 1"
+check "promote 1 applied" 2 "$(pending)"
+check "promoted guard blocks npm" 2 "$(run guard-bash.sh "$(bash_cmd 'cd web && npm install')")"
+check "promoted guard allows pnpm" 0 "$(run guard-bash.sh "$(bash_cmd 'pnpm install')")"
+check "promoted lesson removed from LESSONS.md" 0 "$(grep -c 'Use pnpm' "$proj/.claude/LESSONS.md")"
+check "emptied heading removed, others kept" "0 1" \
+  "$(grep -c '^## Tools' "$proj/.claude/LESSONS.md") $(grep -c '^## Style' "$proj/.claude/LESSONS.md")"
+reply "promote 2."
+check "CLAUDE.md rule added under section" "## Rules promoted from lessons|- Keep functions under 40 lines." \
+  "$(grep -A1 '^## Rules promoted' "$proj/CLAUDE.md" | paste -sd '|' -)"
+reply "reject 3"
+check "reject clears pending" 0 "$(pending)"
+check "rejected lesson stays in LESSONS.md" 1 "$(grep -c 'Never deploy on Fridays' "$proj/.claude/LESSONS.md")"
+"$promote" propose "$proj" >/dev/null 2>&1
+check "rejected lesson not proposed again" 0 "$(pending)"
+
 echo "$pass passed, $fail failed"
 [[ $fail -eq 0 ]]

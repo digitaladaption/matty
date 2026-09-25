@@ -15,11 +15,14 @@ claude-harness/
     │   ├── guard-bash.sh       # PreToolUse: blocks destructive shell commands
     │   ├── plan-gate.sh        # PreToolUse: no code edits while PLAN.md is a draft
     │   ├── plan-approve.sh     # UserPromptSubmit: your "approve" reply approves the plan
+    │   ├── promote-reply.sh    # UserPromptSubmit: your "promote 1" reply applies a promotion
     │   ├── memory-log.sh       # Stop: writes a per-session memory entry
     │   └── session-start.sh    # SessionStart: git state, plan, recent memory, HANDOFF.md
     ├── scripts/
     │   ├── lessons.sh          # weekly: session memory → LESSONS.md, via headless claude
-    │   └── install-cron.sh     # schedules lessons.sh in your crontab
+    │   ├── promote.sh          # proposes/applies promotions of frequent lessons
+    │   ├── install-cron.sh     # schedules lessons.sh in your crontab
+    │   └── lib.sh              # shared headless-claude helper
     ├── agents/
     │   └── reviewer.md         # reviews the diff and re-checks plan criteria
     └── skills/
@@ -42,7 +45,7 @@ Run `./tests/run.sh` after changing any hook.
 ## How the pieces fit
 
 - **Session start**: `session-start.sh` prints the branch, uncommitted changes, `LESSONS.md`, the current plan's criteria, the last 3 session memories and any `HANDOFF.md`.
-- **Every Bash call**: `guard-bash.sh` checks the command against a denylist (`rm -rf /`, force push, `reset --hard`, `curl | sh`…) and blocks it with exit code 2.
+- **Every Bash call**: `guard-bash.sh` checks the command against a denylist (`rm -rf /`, force push, `reset --hard`, `curl | sh`…) plus any patterns promoted into `.claude/guard-patterns.txt`, and blocks matches with exit code 2.
 - **After every turn**: `memory-log.sh` rewrites this session's entry in `.claude/memory/sessions/`: branch, last commit, uncommitted files, plan progress, your last 5 messages and Claude's last reply. It keeps the 20 newest.
 - **End of session**: `/handoff` is still there for when you want a deliberate, written summary on top of the automatic log.
 - **Before committing**: ask Claude to use the `reviewer` subagent.
@@ -66,6 +69,31 @@ It only keeps rules backed by a correction, a repeated instruction or a decision
 - The previous version is saved to `.claude/memory/LESSONS.prev.md`. `LESSONS.md` itself isn't gitignored, so you can commit it and share it.
 - Runs log to `.claude/memory/lessons.log`. Each run is one headless Claude call, billed like any other.
 - Cron needs your machine awake and `claude` logged in. On macOS, cron may need Full Disk Access to reach the project. If you already schedule jobs through Clawdbot, point it at `lessons.sh` instead.
+
+### Lesson promotion
+
+A lesson that keeps coming back deserves more than a reminder. After each lessons run,
+`promote.sh propose` picks every lesson marked "seen 5x" or more (set `PROMOTE_MIN` to change
+the threshold) and asks Claude how to enforce it:
+
+- **Guard**: if the lesson forbids a specific command ("use pnpm, not npm"), Claude writes a regex,
+  a block message and example commands. The script checks the regex before you ever see it.
+  It must compile, block all of its own examples, and not match ordinary commands like
+  `git status`, its allowed examples, or the empty string. A guard that fails is downgraded to a CLAUDE.md rule.
+- **CLAUDE.md rule**: everything else becomes one line under `## Rules promoted from lessons`.
+
+Proposals wait in `.claude/memory/promotions.json`, and the next session opens by listing them.
+Reply in chat:
+
+| You say | What happens |
+|---|---|
+| `promote 1` / `promote 1 3` / `promote all` | Applied: guard line or CLAUDE.md rule added, lesson removed from LESSONS.md |
+| `reject 2` | Dropped, and never proposed again |
+
+Or from a terminal: `.claude/scripts/promote.sh list | apply 1 | reject 2`. Claude can't run
+`promote.sh apply` or `reject` itself, because the Bash guard blocks it. To undo a promotion,
+delete its line from `.claude/guard-patterns.txt` or `CLAUDE.md`. Every apply is logged to
+`.claude/memory/promotions.log`.
 
 ### The plan gate
 

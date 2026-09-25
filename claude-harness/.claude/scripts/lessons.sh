@@ -5,8 +5,11 @@
 #
 #   .claude/scripts/lessons.sh [project-dir] [--dry-run]
 #
-# Env: CLAUDE_BIN (default: claude), LESSONS_DAYS (default: 7), LESSONS_MODEL (optional)
+# Env: CLAUDE_BIN (default: claude), LESSONS_DAYS (default: 7), LESSONS_MODEL (optional),
+#      PROMOTE_MIN (see promote.sh)
 set -euo pipefail
+here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+. "$here/lib.sh"
 
 proj=. dry=""
 for a in "$@"; do
@@ -17,7 +20,6 @@ for a in "$@"; do
 done
 proj=$(cd "$proj" && pwd)
 days=${LESSONS_DAYS:-7}
-claude_bin=${CLAUDE_BIN:-claude}
 mem="$proj/.claude/memory"
 lessons="$proj/.claude/LESSONS.md"
 
@@ -67,23 +69,15 @@ EOF
   echo "</commits>"
 } >"$work/prompt.txt"
 
-# Run from an empty directory with only user settings and no tools, so the project's
-# hooks don't fire (and log this run as a session) and Claude can only return text.
-if ! (cd "$work" && HARNESS_NO_MEMORY=1 "$claude_bin" -p \
-      --setting-sources user --no-session-persistence \
-      ${LESSONS_MODEL:+--model "$LESSONS_MODEL"} \
-      --tools "" <"$work/prompt.txt" >"$work/out.md"); then
+if ! run_claude "$work/prompt.txt" "$work/new.md"; then
   echo "lessons: claude exited with an error; LESSONS.md left unchanged" >&2
   exit 1
 fi
 
-# Strip code fences if the model added them anyway.
-sed -E '/^```/d' "$work/out.md" >"$work/new.md"
-
 if [[ "$(head -n1 "$work/new.md")" != "# Lessons" ]] || (($(wc -l <"$work/new.md") > 80)); then
   echo "lessons: output didn't look like a lessons file; LESSONS.md left unchanged" >&2
   echo "--- output was:" >&2
-  head -20 "$work/out.md" >&2
+  head -20 "$work/new.md" >&2
   exit 1
 fi
 
@@ -94,10 +88,13 @@ fi
 
 if [[ -f "$lessons" ]] && cmp -s "$work/new.md" "$lessons"; then
   echo "lessons: no changes"
-  exit 0
+else
+  mkdir -p "$mem"
+  [[ -f "$lessons" ]] && cp "$lessons" "$mem/LESSONS.prev.md"
+  cp "$work/new.md" "$lessons"
+  echo "lessons: updated $lessons ($(grep -c '^- ' "$lessons" || true) lessons)"
 fi
 
-mkdir -p "$mem"
-[[ -f "$lessons" ]] && cp "$lessons" "$mem/LESSONS.prev.md"
-cp "$work/new.md" "$lessons"
-echo "lessons: updated $lessons ($(grep -c '^- ' "$lessons" || true) lessons)"
+# Lessons seen often enough get proposed for promotion; a failure here shouldn't
+# undo a good lessons run.
+"$here/promote.sh" propose "$proj" || echo "promote: proposal step failed" >&2

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# PreToolUse hook for Bash: blocks commands that are hard to undo.
+# PreToolUse hook for Bash: blocks commands that are hard to undo, plus any patterns
+# promoted from lessons into .claude/guard-patterns.txt.
 # Claude Code sends the tool call as JSON on stdin. Exit 2 blocks the call
 # and feeds stderr back to Claude so it can pick a safer approach.
 
@@ -20,6 +21,7 @@ patterns=(
   'dd if=.* of=/dev/'
   ':\(\)\{ *:\|:& *\};:'
   'curl .*\| *(ba)?sh'
+  'promote\.sh[[:space:]]+(apply|reject)'
 )
 
 for p in "${patterns[@]}"; do
@@ -28,5 +30,17 @@ for p in "${patterns[@]}"; do
     exit 2
   fi
 done
+
+# One promoted rule per line: <ERE><TAB><message>. Lines starting with # are comments.
+promoted="${CLAUDE_PROJECT_DIR:-.}/.claude/guard-patterns.txt"
+if [[ -f "$promoted" ]]; then
+  while IFS=$'\t' read -r p msg; do
+    [[ -z "$p" || "$p" == \#* ]] && continue
+    if [[ "$cmd" =~ $p ]]; then
+      echo "Blocked by a rule promoted from this project's lessons: ${msg:-matched $p}" >&2
+      exit 2
+    fi
+  done <"$promoted"
+fi
 
 exit 0
