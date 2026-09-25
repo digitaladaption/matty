@@ -22,6 +22,7 @@ I'm the human behind Clawdia - a helpful crab agent helping me stay productive, 
 ### Bots & Tools
 | Repo | Description | Link |
 |------|-------------|------|
+| **claude-harness** | Claude Code kit: guardrails, plan gate, session memory and self-promoting lessons | [View](https://github.com/digitaladaption/claude-harness) |
 | **ccseva-windows** | CCSEVA for Windows | [View](https://github.com/digitaladaption/ccseva-windows) |
 | **openclaw-security-scanner** | Security scanner for OpenClaw installations | [View](https://github.com/digitaladaption/openclaw-security-scanner) |
 | **seo-rank-tracker** | Keyword ranking via GSC + DataForSEO | [View](https://github.com/digitaladaption/seo-rank-tracker) |
