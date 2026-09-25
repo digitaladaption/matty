@@ -14,5 +14,7 @@
 - Ask before deleting files or touching anything outside this repo.
 
 ## Harness
+- For anything bigger than a one-file fix, run `/plan` first and wait for approval.
+- Recent session memory and the current plan load automatically at session start.
 - `/handoff` writes `HANDOFF.md`; the next session loads it automatically.
 - Use the `reviewer` subagent before committing non-trivial changes.

@@ -25,9 +25,16 @@ copy() {
 cd "$src"
 while IFS= read -r f; do
   copy "${f#./}"
-done < <(find ./.claude -type f)
+done < <(find ./.claude -type f -not -path './.claude/memory/*')
 
 copy CLAUDE.md
 chmod +x "$target"/.claude/hooks/*.sh
+
+# Session memory is personal by default. Delete this line from the project's
+# .gitignore to share it (e.g. so cloud sessions keep it between runs).
+if ! grep -qxF '.claude/memory/' "$target/.gitignore" 2>/dev/null; then
+  echo '.claude/memory/' >>"$target/.gitignore"
+  echo "write  .gitignore (+ .claude/memory/)"
+fi
 
 echo "Harness installed into $target"

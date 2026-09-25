@@ -13,6 +13,21 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "- Uncommitted changes: $changes"
 fi
 
+if [[ -f PLAN.md ]]; then
+  echo
+  echo "## Current plan (PLAN.md)"
+  grep -m1 '^# ' PLAN.md
+  grep -m1 -E '^Status:' PLAN.md
+  grep -E '^- \[[ xX]\]' PLAN.md
+fi
+
+mem=.claude/memory/sessions
+if ls "$mem"/*.md >/dev/null 2>&1; then
+  echo
+  echo "## Recent sessions (newest first)"
+  ls -t "$mem"/*.md | head -3 | while IFS= read -r f; do cat "$f"; echo; done
+fi
+
 if [[ -f HANDOFF.md ]]; then
   echo
   echo "## Handoff from last session"
